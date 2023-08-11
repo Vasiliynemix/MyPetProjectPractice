@@ -1,9 +1,10 @@
 from aiogram.types import Message
 
 from src.db.models import User
+from src.db.models.abstract_user import AbstractUser
 
 
-async def text_start_answer(message: Message, user: User) -> str:
+async def text_start_answer(message: Message, user: User | AbstractUser) -> str:
     if user.is_super_admin:
         message = (f'Привет, {message.from_user.username}\n'
                    f'Для того, чтобы добавить админа введите команду /add_admin\n'

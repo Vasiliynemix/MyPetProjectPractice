@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +24,7 @@ async def set_user(message: Message, session_maker: sessionmaker):
             user = User(telegram_id=message.from_user.id)
         await session.merge(user)
         await session.commit()
+        return user
 
 
 async def get_user_by_id(message: Message, session_maker: sessionmaker):
@@ -59,7 +61,7 @@ async def get_list_admins(session_maker: sessionmaker) -> List[User]:
         return users
 
 
-async def remove_admin(call: CallbackQuery, session_maker: sessionmaker):
+async def remove_admin(call: CallbackQuery, session_maker: sessionmaker, bot: Bot):
     async with session_maker() as session:
         user = await session.scalar(select(User).where(User.telegram_id == int(call.data[12:])))
         if user.telegram_id == int(os.getenv('SUPER_ADMIN')):
@@ -68,4 +70,5 @@ async def remove_admin(call: CallbackQuery, session_maker: sessionmaker):
         user.is_admin = False
         await session.merge(user)
         await session.commit()
+        await bot.send_message(call.data[12:], 'Вы больше не админ!')
         return user

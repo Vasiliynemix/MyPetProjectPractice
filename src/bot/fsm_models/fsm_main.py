@@ -7,4 +7,5 @@ class FSMMainUser(StatesGroup):
 
 class FSMMainAdmin(StatesGroup):
     start = State()
+    list_categories = State()
     add_admin = State()

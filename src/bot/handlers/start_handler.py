@@ -5,6 +5,7 @@ from aiogram.types import Message
 from sqlalchemy.orm import sessionmaker
 
 from src.bot.fsm_models.fsm_main import FSMMainUser, FSMMainAdmin
+from src.bot.keyboards import admin_kb
 from src.bot.lexicon_ru.start_answer import text_start_answer
 from src.db.models import User
 from src.db.queries import user_queries
@@ -16,11 +17,12 @@ router = Router()
 async def start_command(message: Message, state: FSMContext, session_maker: sessionmaker):
     user: User = await user_queries.get_user_by_id(message, session_maker)
     if user is None:
-        await user_queries.set_user(message, session_maker)
+        user = await user_queries.set_user(message, session_maker)
     if user.is_admin:
         await state.set_state(FSMMainAdmin.start)
         await message.answer(
-            await text_start_answer(message=message, user=user)
+            await text_start_answer(message=message, user=user),
+            reply_markup=await admin_kb.start_admin_menu()
         )
     else:
         await state.set_state(FSMMainUser.start)

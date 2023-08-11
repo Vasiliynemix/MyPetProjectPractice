@@ -1,11 +1,12 @@
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.orm import sessionmaker
 
-from src.bot.filters.callback_admin_list_filter import CallBackAdminListFilter
+from src.bot.filters.admin_filters import CallBackAdminListFilter
 from src.db.queries import user_queries
 
 
-async def get_list_admin(session_maker: sessionmaker):
+async def get_list_admin(session_maker: sessionmaker) -> InlineKeyboardMarkup:
     list_admins_kb = InlineKeyboardBuilder()
     list_admins = await user_queries.get_list_admins(session_maker=session_maker)
     for admin in list_admins:

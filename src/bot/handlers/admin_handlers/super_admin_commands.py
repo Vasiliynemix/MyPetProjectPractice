@@ -1,10 +1,12 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.orm import sessionmaker
 
+from src.bot.filters.admin_filters import CallBackAdminListFilter
 from src.bot.fsm_models.fsm_main import FSMMainAdmin
+from src.bot.keyboards import admin_kb
 from src.bot.keyboards.super_admin_kb import get_list_admin
 from src.bot.middlewares.Is_super_admin_middlewares import IsSuperAdmin
 from src.db.queries import user_queries
@@ -55,20 +57,20 @@ async def get_username_new_admin(message: Message, state: FSMContext, session_ma
         await message.answer(f'пользователь {message.text} не найден, введите корректные данные')
 
 
-@router.callback_query(lambda c: c.data == 'start_admin')
-async def remove_admin(call: CallbackQuery, state: FSMContext):
+@router.callback_query(CallBackAdminListFilter.filter())
+async def remove_admin(call: CallbackQuery, session_maker: sessionmaker, bot: Bot):
     await call.answer()
-    await state.set_state(FSMMainAdmin.start)
-    await call.message.edit_text('Меню')
-
-
-@router.callback_query(lambda c: c.data == F.admin_id)
-async def remove_admin(call: CallbackQuery, session_maker: sessionmaker):
-    await call.answer()
-    user = await user_queries.remove_admin(call=call, session_maker=session_maker)
+    user = await user_queries.remove_admin(call=call, session_maker=session_maker, bot=bot)
     await call.message.edit_text(
         (f'{user.username} удален из списка админов\n'
          f'Чтобы удалить админа из списка нажмите на его username\n'
          f'Список админов'),
         reply_markup=await get_list_admin(session_maker=session_maker)
     )
+
+
+@router.callback_query(lambda c: c.data == 'start_admin')
+async def remove_admin(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    await state.set_state(FSMMainAdmin.start)
+    await call.message.edit_text('Меню', reply_markup=await admin_kb.start_admin_menu())
